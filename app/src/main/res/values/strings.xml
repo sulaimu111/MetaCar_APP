@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">mic&amp;WebRequest</string>
+    <string name="micButton">micButton</string>
+    <string name="editText">editText</string>
+    <string name="textview">TextView</string>
+    <string name="button1">Enter</string>
+    <string name="button2"> </string>
+<!--    <string name="button1">Go to the park</string>-->
+<!--    <string name="button2">Go to the restaurant</string>-->
+    <string name="talk_background">talk_background</string>
+    <string name="TextView1">Where do you want to go?</string>
+    <string name="TextView2" />
+    <string name="editText2" > </string>
+</resources>
