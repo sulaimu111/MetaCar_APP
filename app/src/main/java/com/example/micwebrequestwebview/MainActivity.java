@@ -173,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         System.out.println(error);
-                        textView.setText("That didn't work!");
+//                        textView.setText("That didn't work!");
                     }
                 })
                 {
@@ -465,7 +465,7 @@ public class MainActivity extends AppCompatActivity {
                             }
 //                            Toast.makeText(MainActivity.this, targetText, Toast.LENGTH_SHORT).show();
 //                            Toast.makeText(MainActivity.this, userIpText, Toast.LENGTH_SHORT).show();
-                            textView.setText(targetText);
+//                            textView.setText(targetText);
                             textView1.setText(respondText);
 
                             //POST_TO_NODEJS--------------------------------------------------------------------
@@ -537,7 +537,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     System.out.println(error);
-                    textView.setText("That didn't work!");
+//                    textView.setText("That didn't work!");
                 }
             })
             {
