@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
@@ -30,6 +31,7 @@ import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     String nodeJs_Ip = "http://140.125.32.138:3000";
     //    String carBot_Ip = "http://140.125.32.128:5000/carbot";
     String carBot_Ip = "http://140.125.32.145:5000/carbot";
+    TextToSpeech textToSpeech;
 
     private static final int RECOGNIZER_RESULT = 1;
 //    private static final String TAG = "MyAppTag";
@@ -77,6 +80,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int i) {
+                if (i == TextToSpeech.SUCCESS) {
+                    int language = textToSpeech.setLanguage(Locale.ENGLISH);
+                }
+            }
+        });
+
+        int speech = textToSpeech.speak("Where do you want to go?", textToSpeech.QUEUE_FLUSH, null);
+
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -103,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
 //                                Toast.makeText(MainActivity.this, userIpText, Toast.LENGTH_SHORT).show();
 //                                textView.setText(targetText);
                                 textView1.setText(respondText);
+                                int speech = textToSpeech.speak(respondText, textToSpeech.QUEUE_FLUSH, null);
 
                                 //POST_TO_NODEJS--------------------------------------------------------------------
 
@@ -467,6 +482,7 @@ public class MainActivity extends AppCompatActivity {
 //                            Toast.makeText(MainActivity.this, userIpText, Toast.LENGTH_SHORT).show();
 //                            textView.setText(targetText);
                             textView1.setText(respondText);
+                            int speech = textToSpeech.speak(respondText, textToSpeech.QUEUE_FLUSH, null);
 
                             //POST_TO_NODEJS--------------------------------------------------------------------
 
