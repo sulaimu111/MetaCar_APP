@@ -2,9 +2,17 @@ package com.example.micwebrequestwebview;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
+import android.content.ContextWrapper;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.FileUtils;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -29,8 +37,12 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     TextView textView, textView1, textView2;
     EditText speechText, editText2;
     ImageButton speechButton;
-    String userText, userIpText, targetText, respondText, SpeechWord;
+    String userText, userIpText, targetText, respondText, SpeechWord, SpeechWord2;
     RequestQueue queue;
     Button button1, button2;
     WebView webView;
@@ -46,9 +58,14 @@ public class MainActivity extends AppCompatActivity {
     //    String carBot_Ip = "http://140.125.32.128:5000/carbot";
     String carBot_Ip = "http://140.125.32.145:5000/carbot";
     TextToSpeech textToSpeech;
+    String nowDate;
 
     private static final int RECOGNIZER_RESULT = 1;
 //    private static final String TAG = "MyAppTag";
+    private MediaRecorder mediaRecorder;
+    private MediaPlayer mediaPlayer;
+    private String AudioSavaPath = null;
+    private Button start,stop;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,13 +87,66 @@ public class MainActivity extends AppCompatActivity {
         webView.getSettings().setLoadWithOverviewMode(true);
         webView.loadUrl(nodeJs_Ip + "/Metaverse_RoboMaster1");
 
+        start=(Button)findViewById(R.id.start);
+        stop=(Button)findViewById(R.id.button1);
+
+        start.setOnClickListener(new View.OnClickListener(){
+            //執行背景作業
+            @Override
+            public void onClick(View arg0) {
+                // TODO Auto-generated method stub
+                Intent intent = new Intent(MainActivity.this, RecordingService.class);
+                startService(intent);
+            }});
+        stop.setOnClickListener(new View.OnClickListener(){
+
+            //停止背景作業
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Intent intent = new Intent(MainActivity.this, RecordingService.class);
+                stopService(intent);
+            }});
+
         speechButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 Intent speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                 speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
                 speechIntent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speech to text");
                 startActivityForResult(speechIntent, RECOGNIZER_RESULT);
+
+                nowDate = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+                System.out.println(nowDate);
+
+                if (checkPermissions() == true) {
+
+//                    AudioSavaPath = Environment.getExternalStorageDirectory().getAbsolutePath()
+//                            +"/"+"recordingAudio.wav";
+
+                    mediaRecorder = new MediaRecorder();
+                    mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                    mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                    mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                    mediaRecorder.setOutputFile(getFilePath());
+
+                    try {
+                        mediaRecorder.prepare();
+                        mediaRecorder.start();
+                        Toast.makeText(MainActivity.this, "Recording started", Toast.LENGTH_SHORT).show();
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else {
+
+                    ActivityCompat.requestPermissions(MainActivity.this,new String[]{
+                            Manifest.permission.RECORD_AUDIO,Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    },1);
+                }
+
+
             }
         });
 
@@ -94,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d("Debug", nowDate);
                 // Request a string response from the provided URL.
                 JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, carBot_Ip,
                         null,
@@ -458,6 +529,16 @@ public class MainActivity extends AppCompatActivity {
 //            textView2.setText(SpeechWord);
             editText2.setText(SpeechWord);
 //            Log.d(TAG, SpeechWord);
+            ArrayList<String> matches2 = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            SpeechWord2 = matches2.get(0).toString();
+
+            mediaRecorder.stop();
+            mediaRecorder.release();
+            Toast.makeText(MainActivity.this, "Recording stopped", Toast.LENGTH_SHORT).show();
+
+//            File file = new File(Environment.getExternalStorageDirectory() + "/Miaudio.mp3");
+//            byte[] bytes = new byte[0];
+//            bytes = FileUtils.readFileToByteArray(file);
 
             // Request a string response from the provided URL.
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, carBot_Ip,
@@ -631,4 +712,19 @@ public class MainActivity extends AppCompatActivity {
 //        }
 //        super.onActivityResult(requestCode, resultCode, data);
 //    }
+    private boolean checkPermissions() {
+        int first = ActivityCompat.checkSelfPermission(getApplicationContext(),
+                Manifest.permission.RECORD_AUDIO);
+        int second = ActivityCompat.checkSelfPermission(getApplicationContext(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        return first == PackageManager.PERMISSION_GRANTED &&
+                second == PackageManager.PERMISSION_GRANTED;
+    }
+    private String getFilePath() {
+        ContextWrapper contextWrapper = new ContextWrapper(getApplicationContext());
+        File musicDirectory = contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+        File file = new File(musicDirectory, "testRecordingFile" + ".mp3");
+        return file.getPath();
+    }
 }
